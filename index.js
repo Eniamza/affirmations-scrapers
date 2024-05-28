@@ -28,12 +28,13 @@ let getAllLinks = async (page) => {
 
     linkarr = linkarr.concat(links);
   
-    console.log(linkarr)
+    console.log("Logging links from page 1")
 
     let isPrevPageAvailable = true;
 
     while (isPrevPageAvailable) {
       pageNum++;
+      console.log("Logging links from page " + pageNum)
       await page.goto(`https://www.affirmations.online/category/money-affirmations/page/${pageNum}/`);
       let links = await getAllLinks(page);
       linkarr = linkarr.concat(links);
@@ -44,10 +45,25 @@ let getAllLinks = async (page) => {
         }
     }
 
-    // let navPrevButton = await page.$eval('.nav-previousss a', element => element.href);
-    // console.log(navPrevButton);
-
     console.log(linkarr)
+
+    
+    //NEXT STEP scraping titles and affirmations
+
+    let affirmations = [];
+
+    for (let i = 0; i < linkarr.length; i++) {
+        await page.goto(linkarr[i]);
+        await page.waitForSelector('.entry-title');
+        await page.waitForSelector('.entry-content');
+        const affirmationTitle = await page.$eval('.entry-title', el => el.innerText);
+        const affirmation = await page.$eval('.entry-content p', el => el.innerText);
+
+        affirmations.push({affirmationTitle, affirmation});
+    }
+
+    Bun.write("affirmations-money.json", JSON.stringify(affirmations, null, 2))
+
 
     await browser.close();
   })();
